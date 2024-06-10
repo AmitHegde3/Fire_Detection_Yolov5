@@ -68,7 +68,7 @@ from utils.torch_utils import select_device, smart_inference_mode
 
 @smart_inference_mode()
 def run(
-    weights=ROOT / "yolov5s.pt",  # model path or triton URL
+    weights=ROOT / "best.pt",  # model path or triton URL
     source=ROOT / "data/images",  # file/dir/URL/glob/screen/0(webcam)
     data=ROOT / "data/coco128.yaml",  # dataset.yaml path
     imgsz=(640, 640),  # inference size (height, width)
@@ -162,27 +162,68 @@ def run(
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
         # Define the path for the CSV file
-        csv_path = save_dir / "predictions.csv"
+        # csv_path = save_dir / "predictions.csv"
+        csv_path = Path("mlproject/predictions.csv")
+
 
         # Create or append to the CSV file
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
 #  Modification of Writing to CSV file
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        def write_to_csv(image_name, prediction, confidence,x_min, y_min, x_max, y_max):
+        # def write_to_csv(image_name, prediction, confidence,x_min, y_min, x_max, y_max):
+        #     """Writes prediction data for an image to a CSV file, appending if the file exists."""
+        #     width_bb = x_max - x_min
+        #     height_bb = y_max - y_min
+        #     area_bb = width_bb * height_bb
+        #     if(area_bb > 30000):
+        #         data = {"x_min":x_min,"y_min":y_min,"x_max":x_max,"y_max":y_max,"area":area_bb,"Confidence": confidence,"Prediction": "BIG"}
+        #     else:
+        #         data = {"x_min":x_min,"y_min":y_min,"x_max":x_max,"y_max":y_max,"area":area_bb,"Confidence": confidence,"Prediction": "SMALL"}
+
+           
+        #     with open(csv_path, mode="a", newline="") as f:
+        #         writer = csv.DictWriter(f, fieldnames=data.keys())
+        #         if not csv_path.is_file():
+        #             writer.writeheader()
+        #         writer.writerow(data)
+
+        def write_to_csv(image_name, prediction, confidence, x_min, y_min, x_max, y_max):
             """Writes prediction data for an image to a CSV file, appending if the file exists."""
             width_bb = x_max - x_min
             height_bb = y_max - y_min
             area_bb = width_bb * height_bb
-            if(area_bb > 30000):
-                data = {"x_min":x_min,"y_min":y_min,"x_max":x_max,"y_max":y_max,"area":area_bb,"Confidence": confidence,"Prediction": "BIG"}
+            
+            if area_bb > 30000:
+                data = {
+                    "x_min": x_min,
+                    "y_min": y_min,
+                    "x_max": x_max,
+                    "y_max": y_max,
+                    "area": area_bb,
+                    "Confidence": confidence,
+                    "Prediction": "BIG"
+                }
             else:
-                data = {"x_min":x_min,"y_min":y_min,"x_max":x_max,"y_max":y_max,"area":area_bb,"Confidence": confidence,"Prediction": "SMALL"}
+                data = {
+                    "x_min": x_min,
+                    "y_min": y_min,
+                    "x_max": x_max,
+                    "y_max": y_max,
+                    "area": area_bb,
+                    "Confidence": confidence,
+                    "Prediction": "SMALL"
+                }
 
-           
+            # Ensure the directory exists
+            csv_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Check if the file already exists to determine whether to write the header
+            file_exists = csv_path.is_file()
+            
             with open(csv_path, mode="a", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=data.keys())
-                if not csv_path.is_file():
+                if not file_exists:
                     writer.writeheader()
                 writer.writerow(data)
 
@@ -282,7 +323,7 @@ def run(
 def parse_opt():
     """Parses command-line arguments for YOLOv5 detection, setting inference options and model configurations."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--weights", nargs="+", type=str, default=ROOT / "yolov5s.pt", help="model path or triton URL")
+    parser.add_argument("--weights", nargs="+", type=str, default=ROOT / "best.pt", help="model path or triton URL")
     parser.add_argument("--source", type=str, default=ROOT / "data/images", help="file/dir/URL/glob/screen/0(webcam)")
     parser.add_argument("--data", type=str, default=ROOT / "data/coco128.yaml", help="(optional) dataset.yaml path")
     parser.add_argument("--imgsz", "--img", "--img-size", nargs="+", type=int, default=[640], help="inference size h,w")
