@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv5 Fire Detection</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #555;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background: #f4f4f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+            max-height: 300px; /* Limit height to prevent taking over the entire page */
+            overflow-y: auto; /* Add scrollbar if content exceeds max height */
+        }
+        p{
+            font-size: 15px;
+        }
+        .logo {
+            max-width: 56%; /* Ensure image doesn't exceed its original size */
+            height: auto; /* Maintain aspect ratio */
+            display: block; /* Make the image a block-level element */
+            margin: 0 auto 20px; /* Center horizontally and add bottom margin */
+        }
+    </style>
+    <script>
+        function startModel() {
+            const args = document.getElementById('yolov5-args').value;
+            fetch('/start-model', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ args: args })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            });
+        }
+
+        function stopModel() {
+            fetch('/stop-model', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            });
+        }
+
+        function runMLModel() {
+            fetch('/run-ml-model', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('ml-model-output').innerText = data.output;
+                } else {
+                    alert('Error running ML model: ' + data.message);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>YOLOv7 Fire Detection</h1>
+        <h4>Developers:</h4>
+        <p>Amit Chandrashekhar Hegde - 1BM21IS020</p>
+        <p>Ayush Choudhary - 1BM21IS040</p>
+        <div class="input-group">
+            <label for="yolov5-args">YOLOv7 Args:</label>
+            <input type="text" id="yolov5-args" placeholder="--source 0 --save-csv">
+        </div>
+        <img src="{{ url_for('static', filename='meme.png') }}" alt="Fire Detection Logo" class="logo">
+        <button onclick="startModel()">Start YOLOv7 Model</button>
+        <button onclick="stopModel()">Stop YOLOv7 Model</button>
+        <br><br>
+        <button onclick="runMLModel()">Run ML Model</button>
+        <br><br>
+        <pre id="ml-model-output"></pre>
+    </div>
+</body>
+</html>

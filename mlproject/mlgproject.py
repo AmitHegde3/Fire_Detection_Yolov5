@@ -7,7 +7,7 @@ from sklearn.ensemble import StackingClassifier
 import sqlite3
 
 # Load the CSV file without headers
-data = pd.read_csv('predictions.csv', header=None)
+data = pd.read_csv('mlproject\predictions.csv', header=None)
 
 # Display the first few rows to understand the structure
 print("Initial data preview:")
@@ -18,7 +18,7 @@ data.columns = data.iloc[0]
 data = data[1:].reset_index(drop=True)
 
 # Display the new header to confirm
-print("Columns after setting the first row as header:")
+print("\nColumns after setting the first row as header:")
 print(data.columns)
 
 # Rename columns
@@ -39,12 +39,12 @@ data = data.astype({
 data['area'] = abs((data['x2'] - data['x1']) * (data['y2'] - data['y1']))
 
 # Display the first few rows to verify the changes
-print("Data preview after renaming and type conversion:")
+print("\nData preview after renaming and type conversion:")
 print(data.head())
 
 # Calculate area median
 median_area = data['area'].median()
-print(median_area)
+print("\nMeadian Area: " , median_area)
 
 # Label area column and train model
 data['area_label'] = data['area'].apply(lambda x: 'SMALL' if x < median_area else 'BIG')
@@ -65,7 +65,7 @@ param_grid_rf = {
 }
 grid_search_rf = GridSearchCV(rf, param_grid_rf, cv=5)
 grid_search_rf.fit(X_train, y_train)
-print("Best parameters for Random Forest:", grid_search_rf.best_params_)
+print("\nBest parameters for Random Forest:", grid_search_rf.best_params_)
 best_rf = grid_search_rf.best_estimator_
 
 # Hyperparameter Tuning for Gradient Boosting
@@ -76,25 +76,25 @@ param_grid_gb = {
 }
 grid_search_gb = GridSearchCV(gb, param_grid_gb, cv=5)
 grid_search_gb.fit(X_train, y_train)
-print("Best parameters for Gradient Boosting:", grid_search_gb.best_params_)
+print("\nBest parameters for Gradient Boosting:", grid_search_gb.best_params_)
 best_gb = grid_search_gb.best_estimator_
 
 # Cross-validation for Random Forest
 cv_scores_rf = cross_val_score(best_rf, X_train, y_train, cv=5)
-print("Cross-validation scores for Random Forest:", cv_scores_rf)
-print("Mean CV accuracy for Random Forest:", cv_scores_rf.mean())
+print("\nCross-validation scores for Random Forest:", cv_scores_rf)
+print("\nMean CV accuracy for Random Forest:", cv_scores_rf.mean())
 
 # Cross-validation for Gradient Boosting
 cv_scores_gb = cross_val_score(best_gb, X_train, y_train, cv=5)
-print("Cross-validation scores for Gradient Boosting:", cv_scores_gb)
-print("Mean CV accuracy for Gradient Boosting:", cv_scores_gb.mean())
+print("\nCross-validation scores for Gradient Boosting:", cv_scores_gb)
+print("\nMean CV accuracy for Gradient Boosting:", cv_scores_gb.mean())
 
 # Ensemble Methods with Stacking Classifier
 estimators = [('rf', best_rf), ('gb', best_gb)]
 stacking_classifier = StackingClassifier(estimators=estimators, final_estimator=RandomForestClassifier())
 stacking_classifier.fit(X_train, y_train)
 y_pred_stacking = stacking_classifier.predict(X_test)
-print("Stacking Classifier")
+print("\nStacking Classifier")
 print(classification_report(y_test, y_pred_stacking, target_names=label_encoder.classes_))
 
 # Storing in Database
@@ -124,12 +124,12 @@ cursor.executemany(insert_query, predicted_data)
 conn.commit()
 
 # Fetch Data from Database
-fetch_query = "SELECT * FROM predicted_data"
+fetch_query = "SELECT * FROM predicted_data LIMIT 10"
 cursor.execute(fetch_query)
 fetched_data = cursor.fetchall()
 
 # Print Fetched Data in a Readable Format
-print("Fetched Data:")
+print("\nFetched Data:")
 print("{:<5} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15} {:<20}".format("ID", "X1", "Y1", "X2", "Y2", "Aspect Ratio", "Size Label", "Predicted Area Label"))
 for row in fetched_data:
     print("{:<5} {:<10.2f} {:<10.2f} {:<10.2f} {:<10.2f} {:<15.2f} {:<15} {:<20}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
